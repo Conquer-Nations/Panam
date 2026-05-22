@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Pan American Wire MFG — Customer Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #f59e0b;
+    --accent-soft: #fbbf24;
+    --good: #10b981;
+    --bad: #ef4444;
+    --border: #334155;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  a { color: var(--accent-soft); }
+
+  /* Login */
+  #login {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 60%);
+    z-index: 100;
+  }
+  .login-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    width: 360px;
+    box-shadow: 0 25px 60px rgba(0,0,0,.5);
+  }
+  .login-card h1 {
+    margin: 0 0 4px 0; font-size: 22px; color: var(--accent);
+    letter-spacing: .5px;
+  }
+  .login-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  .login-card label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: .5px; text-transform: uppercase; }
+  .login-card input {
+    width: 100%; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; font-size: 15px; outline: none;
+  }
+  .login-card input:focus { border-color: var(--accent); }
+  .login-card button {
+    margin-top: 20px; width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: var(--accent); color: #1e293b; font-weight: 700; font-size: 15px;
+    cursor: pointer; transition: background .2s;
+  }
+  .login-card button:hover { background: var(--accent-soft); }
+  .login-error { color: var(--bad); font-size: 13px; margin-top: 12px; min-height: 18px; }
+  .login-foot { color: var(--muted); font-size: 11px; margin-top: 24px; text-align: center; }
+
+  /* App */
+  #app { display: none; }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header .brand {
+    display: flex; align-items: center; gap: 14px;
+  }
+  header .logo {
+    width: 42px; height: 42px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), #b45309);
+    display: flex; align-items: center; justify-content: center;
+    color: #1e293b; font-weight: 800; font-size: 18px;
+  }
+  header h1 { margin: 0; font-size: 17px; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  header .meta { color: var(--muted); font-size: 12px; text-align: right; }
+  header button {
+    margin-left: 16px;
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+  }
+  header button:hover { color: var(--text); border-color: var(--accent); }
+
+  nav.tabs {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex; gap: 4px; overflow-x: auto;
+  }
+  nav.tabs button {
+    background: transparent; border: none; color: var(--muted);
+    padding: 14px 18px; cursor: pointer; font-size: 14px;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  main { padding: 28px; max-width: 1400px; margin: 0 auto; }
+
+  .stat-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px;
+  }
+  .stat-card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; margin: 8px 0 4px; color: var(--accent); }
+  .stat-card .delta { font-size: 12px; color: var(--muted); }
+  .stat-card .delta.bad { color: var(--bad); }
+  .stat-card .delta.good { color: var(--good); }
+
+  .chart-row {
+    display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 28px;
+  }
+  @media (max-width: 900px) { .chart-row { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px;
+  }
+  .chart-card h3 { margin: 0 0 16px 0; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .chart-card .chart-wrap { position: relative; height: 280px; }
+
+  .table-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden;
+  }
+  .table-card .table-head {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .table-card h3 { margin: 0; font-size: 15px; }
+  .table-card .controls { display: flex; gap: 8px; align-items: center; }
+  .table-card .controls input {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none;
+    min-width: 200px;
+  }
+  .table-card .controls input:focus { border-color: var(--accent); }
+  .table-wrap { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  thead { background: var(--panel-2); position: sticky; top: 0; }
+  thead th {
+    padding: 10px 12px; text-align: left; color: var(--muted);
+    font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th.sorted-asc::after { content: ' ▲'; color: var(--accent); }
+  thead th.sorted-desc::after { content: ' ▼'; color: var(--accent); }
+  tbody td {
+    padding: 8px 12px; border-bottom: 1px solid #2a3447;
+    white-space: nowrap;
+  }
+  tbody tr:hover { background: rgba(245,158,11,.05); }
+  tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody td.neg { color: var(--bad); }
+  .table-foot {
+    padding: 12px 20px; color: var(--muted); font-size: 12px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+  }
+  .pill {
+    display:inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px;
+    background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+  }
+
+  .empty { padding: 40px; text-align: center; color: var(--muted); }
+
+  #live-indicator {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 1px 8px;
+    border-radius: 99px;
+    background: rgba(16,185,129,.15);
+    color: var(--good);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    transition: background .4s, color .4s;
+  }
+  #live-indicator.flash {
+    background: var(--accent);
+    color: #1e293b;
+  }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form id="login-form" class="login-card" onsubmit="return doLogin(event)">
+    <div style="text-align:center; margin-bottom: 20px;">
+      <div style="display:inline-block; width:58px; height:58px; border-radius:12px; background:linear-gradient(135deg,#f59e0b,#b45309); color:#1e293b; font-weight:800; font-size:24px; line-height:58px;">PAW</div>
+    </div>
+    <h1>Pan American Wire MFG</h1>
+    <div class="sub">Customer Shipment Portal</div>
+    <label for="pw">Password</label>
+    <div style="position:relative;">
+      <input id="pw" type="password" autocomplete="off" autofocus spellcheck="false" autocapitalize="off">
+      <button type="button" id="pw-toggle" tabindex="-1"
+              style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:11px; padding:4px 8px;">SHOW</button>
+    </div>
+    <button type="submit" id="login-btn">Sign In</button>
+    <div id="login-error" class="login-error"></div>
+    <div class="login-foot">© Conquer Nation Logistics</div>
+  </form>
+</div>
+
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="logo">PAW</div>
+      <div>
+        <h1>Pan American Wire MFG — Shipment Portal</h1>
+        <div class="sub">Conquer Nation Logistics &nbsp;·&nbsp; <span id="meta-exported"></span></div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center;">
+      <div class="meta">
+        Report date: <strong id="meta-today"></strong><br>
+        <span id="role-badge">Customer view — read only</span>
+        <span id="live-indicator" title="Live updates active">● LIVE</span>
+      </div>
+      <button onclick="logout()">Sign Out</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <main id="view"></main>
+</div>
+
+<script>
+// === CONFIG ===
+// Two roles, two passwords. Change these to suit, then save and reupload index.html.
+const PASSWORDS = {
+  developer: "Developer2025",     // Full access: all tabs (Dashboard, Inventory, Monthly, Weekly, 10G, 11G, 14G, Balance Sheet)
+  customer:  "PanAmerican2025"    // Customer access: Dashboard + Current Inventory only
+};
+const LIVE_UPDATE_INTERVAL_MS = 30000;  // poll data.json every 30s
+const MIN_DATE = "2026-01-01";          // YYYY-MM-DD; everything before this is hidden from the dashboard
+
+const ALL_TABS = [
+  { key: "dashboard", label: "Dashboard",         roles: ["developer", "customer"] },
+  { key: "inventory", label: "Current Inventory", roles: ["developer", "customer"] },
+  { key: "monthly",   label: "Monthly Invoices",  roles: ["developer"] },
+  { key: "weekly",    label: "Weekly Invoices",   roles: ["developer"] },
+  { key: "g10",       label: "10 Gauge",          roles: ["developer"] },
+  { key: "g11",       label: "11 Gauge",          roles: ["developer"] },
+  { key: "g14",       label: "14 Gauge",          roles: ["developer"] },
+  { key: "balance",   label: "Snapshot History",  roles: ["developer"] }
+];
+const TAB_TO_SHEET = {
+  monthly: "INVOICE MONTHLY ",
+  weekly:  "INVOICE WEEKLY ",
+  g10:     "10 G",
+  g11:     "11 G",
+  g14:     "14 G Updates",
+  balance: "Balance Sheet"
+};
+
+let DATA = null;
+let ROLE = null;
+let activeTab = "dashboard";
+let tableState = {};
+let liveUpdateTimer = null;
+let chartInstances = {};
+
+// === Login ===
+function doLogin(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (e && e.stopPropagation) e.stopPropagation();
+  const pwEl = document.getElementById("pw");
+  const pw = (pwEl && pwEl.value || "").trim();
+  let matched = null;
+  for (const role of Object.keys(PASSWORDS)) {
+    if (PASSWORDS[role] === pw) { matched = role; break; }
+  }
+  if (matched) {
+    sessionStorage.setItem("paw_authed", "1");
+    sessionStorage.setItem("paw_role", matched);
+    ROLE = matched;
+    showApp();
+  } else {
+    const err = document.getElementById("login-error");
+    if (err) err.textContent = pw ? "Incorrect password." : "Please enter a password.";
+  }
+  return false;
+}
+
+// Wire login handlers belt-and-suspenders: form submit, button click, Enter key.
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("login-btn");
+  if (btn) btn.addEventListener("click", doLogin);
+  const pw = document.getElementById("pw");
+  if (pw) pw.addEventListener("keydown", (ev) => { if (ev.key === "Enter") doLogin(ev); });
+  const form = document.getElementById("login-form");
+  if (form) form.addEventListener("submit", doLogin);
+  const toggle = document.getElementById("pw-toggle");
+  if (toggle && pw) {
+    toggle.addEventListener("click", () => {
+      if (pw.type === "password") { pw.type = "text"; toggle.textContent = "HIDE"; }
+      else { pw.type = "password"; toggle.textContent = "SHOW"; }
+    });
+  }
+});
+
+function logout() {
+  sessionStorage.removeItem("paw_authed");
+  sessionStorage.removeItem("paw_role");
+  if (liveUpdateTimer) clearInterval(liveUpdateTimer);
+  location.reload();
+}
+
+function showApp() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  init();
+}
+
+function visibleTabs() {
+  return ALL_TABS.filter(t => t.roles.includes(ROLE));
+}
+
+// === Init ===
+async function init() {
+  if (!(await loadData(true))) return;
+
+  document.getElementById("meta-today").textContent = new Date().toLocaleDateString();
+  const tabs = visibleTabs();
+
+  // Role badge in header
+  const roleBadge = document.getElementById("role-badge");
+  if (roleBadge) {
+    roleBadge.textContent = ROLE === "developer" ? "Developer · full access" : "Customer view — read only";
+  }
+
+  // Build tabs (only those visible to current role)
+  const tabEl = document.getElementById("tabs");
+  tabEl.innerHTML = tabs.map(t => `<button data-tab="${t.key}">${t.label}</button>`).join("");
+  tabEl.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => switchTab(b.dataset.tab));
+  });
+
+  // Default to first allowed tab
+  switchTab(tabs[0].key);
+
+  // Start live updates
+  if (liveUpdateTimer) clearInterval(liveUpdateTimer);
+  liveUpdateTimer = setInterval(liveCheck, LIVE_UPDATE_INTERVAL_MS);
+}
+
+async function loadData(initial) {
+  try {
+    const resp = await fetch("data.json?_=" + Date.now(), { cache: "no-store" });
+    DATA = await resp.json();
+    document.getElementById("meta-exported").textContent = "Data as of " + (DATA.exportedAt || "—");
+    return true;
+  } catch (err) {
+    if (initial) {
+      document.getElementById("view").innerHTML =
+        `<div class="empty">Could not load data.json. Make sure it is in the same folder as index.html. (${err.message})</div>`;
+    }
+    return false;
+  }
+}
+
+async function liveCheck() {
+  const prev = DATA && DATA.exportedAt;
+  try {
+    const resp = await fetch("data.json?_=" + Date.now(), { cache: "no-store" });
+    const next = await resp.json();
+    if (next.exportedAt && next.exportedAt !== prev) {
+      DATA = next;
+      document.getElementById("meta-exported").textContent = "Data as of " + DATA.exportedAt;
+      flashLiveIndicator();
+      switchTab(activeTab); // re-render current tab with new data
+    }
+  } catch (e) { /* network blip — silent */ }
+}
+
+function flashLiveIndicator() {
+  const el = document.getElementById("live-indicator");
+  if (!el) return;
+  el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 1500);
+}
+
+function destroyCharts() {
+  Object.values(chartInstances).forEach(c => { try { c.destroy(); } catch (e) {} });
+  chartInstances = {};
+}
+
+function switchTab(key) {
+  destroyCharts();
+  activeTab = key;
+  document.querySelectorAll("nav.tabs button").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === key);
+  });
+  if (key === "dashboard") renderDashboard();
+  else if (key === "inventory") renderInventory();
+  else if (key === "balance") renderBalanceSnapshots();
+  else renderSheet(key);
+}
+
+// === Helpers ===
+function fmtNum(v) {
+  if (v == null || v === "") return "";
+  if (typeof v !== "number") return v;
+  if (Math.abs(v) >= 1 && Math.floor(v) === v && Math.abs(v) < 1e10) {
+    return v.toLocaleString("en-US");
+  }
+  if (Math.abs(v) < 1 && v !== 0) return v.toFixed(2);
+  return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function isDateString(s) {
+  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+function fmtDate(s) {
+  if (!isDateString(s)) return s;
+  const [y,m,d] = s.split("-");
+  return `${m}/${d}/${y}`;
+}
+function fmtCell(v) {
+  if (v == null) return "";
+  if (isDateString(v)) return fmtDate(v);
+  if (typeof v === "number") return fmtNum(v);
+  return String(v);
+}
+
+function getSheet(name) {
+  return DATA && DATA.sheets && DATA.sheets[name];
+}
+
+function inDateRange(dateStr) {
+  return isDateString(dateStr) && dateStr >= MIN_DATE;
+}
+function rowHasInRangeDate(row) {
+  return row.some(c => isDateString(c) && c >= MIN_DATE);
+}
+function rowAnyDate(row) {
+  return row.some(c => isDateString(c));
+}
+
+// Recompute received/shipped totals from raw sheets, filtered to MIN_DATE onward.
+// 10 G / 11 G schema: A=container(0), F=recvDate(5), G=plt(6), H=units(7), J=sqft(9),
+//                     K=shipDate(10), M=shipPlt(12), N=shipUnits(13), P=shipSqft(15)
+// 14 G Updates / Invoice schemas: A=commodity(0), G=recvDate(6), H=plt(7), I=units(8), L=sqft(11),
+//                                 M=shipDate(12), O=shipPlt(14), P=shipUnits(15), R=shipSqft(17)
+function computeActivity() {
+  const zero = () => ({ pallets: 0, units: 0, sqft: 0 });
+  const out = {
+    received: { g10: zero(), g11: zero(), g14: zero(), total: zero() },
+    shipped:  { g10: zero(), g11: zero(), g14: zero(), total: zero() }
+  };
+
+  const addNum = (acc, key, v) => { if (typeof v === "number") acc[key] += v; };
+
+  for (const [name, gkey] of [["10 G", "g10"], ["11 G", "g11"]]) {
+    const sheet = getSheet(name);
+    if (!sheet) continue;
+    for (let i = 2; i < sheet.cells.length; i++) {
+      const r = sheet.cells[i];
+      if (!r) continue;
+      const a = r[0];
+      if (a == null || String(a).trim() === "") continue;
+      if (inDateRange(r[5])) {
+        addNum(out.received[gkey], "pallets", r[6]);
+        addNum(out.received[gkey], "units",   r[7]);
+        addNum(out.received[gkey], "sqft",    r[9]);
+      }
+      if (inDateRange(r[10])) {
+        addNum(out.shipped[gkey], "pallets", r[12]);
+        addNum(out.shipped[gkey], "units",   r[13]);
+        addNum(out.shipped[gkey], "sqft",    r[15]);
+      }
+    }
+  }
+
+  const s14 = getSheet("14 G Updates");
+  if (s14) {
+    for (let i = 1; i < s14.cells.length; i++) {
+      const r = s14.cells[i];
+      if (!r) continue;
+      const a = r[0];
+      if (a == null || String(a).trim() === "") continue;
+      if (inDateRange(r[6])) {
+        addNum(out.received.g14, "pallets", r[7]);
+        addNum(out.received.g14, "units",   r[8]);
+        addNum(out.received.g14, "sqft",    r[11]);
+      }
+      if (inDateRange(r[12])) {
+        addNum(out.shipped.g14, "pallets", r[14]);
+        addNum(out.shipped.g14, "units",   r[15]);
+        addNum(out.shipped.g14, "sqft",    r[17]);
+      }
+    }
+  }
+
+  for (const side of ["received", "shipped"]) {
+    for (const k of ["pallets", "units", "sqft"]) {
+      out[side].total[k] = out[side].g10[k] + out[side].g11[k] + out[side].g14[k];
+    }
+  }
+  return out;
+}
+
+// === Balance Sheet snapshot parser ===
+// Each snapshot block in Balance Sheet looks like:
+//   Row N:    "Current on hand [Pan American]"   (col A)
+//   Row N+1:  Date | 10g Pallets | 11g Pallets | 14g Pallets ...
+//   Row N+2:  <date> | <10g text> | <11g text> | "Partial Pallets" | "Full Pallets"
+//   Row N+3:  (blank A-C) | <14g partial #1> | <14g full text>
+//   Row N+k:  (blank A-C) | <14g partial #k>    (additional partial pallets)
+// We capture each block and parse pallet counts.
+function parseBalanceSnapshots() {
+  const sheet = getSheet("Balance Sheet");
+  if (!sheet) return [];
+  const cells = sheet.cells;
+  const out = [];
+  for (let r = 0; r < cells.length; r++) {
+    const a = cells[r] && cells[r][0];
+    if (typeof a !== "string" || !/current on hand/i.test(a)) continue;
+    // data row is r+2 (0-indexed)
+    const dataRow = cells[r + 2];
+    if (!dataRow) continue;
+    const date = dataRow[0];
+    const g10 = dataRow[1];
+    const g11 = dataRow[2];
+    // 14g partial pallets accumulate from dataRow col D onward, then rows below in col D
+    const partials = [];
+    if (dataRow[3] && !/partial pallets/i.test(String(dataRow[3]))) partials.push(dataRow[3]);
+    // The "Full Pallets" total typically lives on the row below the data row, col E
+    // (because dataRow col E holds the label "Full Pallets" in some blocks; in others it has the value).
+    // We probe both rows.
+    let g14Full = null;
+    const valueRow = cells[r + 3];
+    if (valueRow) {
+      if (valueRow[3]) partials.push(valueRow[3]);
+      if (valueRow[4]) g14Full = valueRow[4];
+    }
+    if (!g14Full && dataRow[4] && !/full pallets/i.test(String(dataRow[4]))) g14Full = dataRow[4];
+    // Scan further rows for additional partials (until blank D and not another "Current on hand")
+    for (let rr = r + 4; rr < cells.length; rr++) {
+      const rowA = cells[rr] && cells[rr][0];
+      if (typeof rowA === "string" && /current on hand/i.test(rowA)) break;
+      const d = cells[rr] && cells[rr][3];
+      if (d == null || String(d).trim() === "") {
+        // Allow one blank gap? No — blank row ends the block.
+        break;
+      }
+      partials.push(d);
+    }
+    out.push({ rowIdx: r, date, g10, g11, partials, g14Full });
+  }
+  return out;
+}
+
+// Parse leading integer pallet count from snapshot text like "2 pallets of 72 boxes",
+// "3 pallets 72 boxes", "1 pallet of 23 bundles", "68 pallets of 5,304 bundles", "1 pallet of 48".
+function parsePalletCount(s) {
+  if (s == null) return 0;
+  if (typeof s === "number") return s;
+  const m = String(s).match(/^\s*(\d+)\s*pallets?\b/i);
+  if (m) return parseInt(m[1], 10);
+  // Plain "3" -> 3
+  const n = Number(String(s).trim());
+  return isFinite(n) ? n : 0;
+}
+// Parse the second number (bundles/boxes) from "X pallets of Y bundles" / "X pallets Y boxes"
+function parseBundleCount(s) {
+  if (s == null) return 0;
+  if (typeof s === "number") return 0;
+  const m = String(s).match(/(\d[\d,]*)\s*(bundles|boxes)/i);
+  if (m) return parseInt(m[1].replace(/,/g, ""), 10);
+  // Fallback: "X pallets of Y" — grab second number
+  const m2 = String(s).match(/pallets?\s*(?:of\s*)?(\d[\d,]*)/i);
+  if (m2) return parseInt(m2[1].replace(/,/g, ""), 10);
+  return 0;
+}
+
+function getLatestSnapshot() {
+  const snaps = parseBalanceSnapshots();
+  if (!snaps.length) return null;
+  // Sort by date desc; when dates tie, the LATER row in the sheet wins (appended at bottom).
+  snaps.sort((a, b) => {
+    const ad = isDateString(a.date) ? a.date : "";
+    const bd = isDateString(b.date) ? b.date : "";
+    const cmp = bd.localeCompare(ad);
+    if (cmp !== 0) return cmp;
+    return b.rowIdx - a.rowIdx;
+  });
+  return snaps[0];
+}
+
+function snapshotTotals(snap) {
+  if (!snap) return { g10: 0, g11: 0, g14: 0, g14Partial: 0, g14Full: 0, total: 0, bundles10: 0, bundles11: 0, bundles14Partial: 0, bundles14Full: 0 };
+  const g10 = parsePalletCount(snap.g10);
+  const g11 = parsePalletCount(snap.g11);
+  const g14Partial = snap.partials.reduce((sum, p) => sum + parsePalletCount(p), 0);
+  const g14Full = parsePalletCount(snap.g14Full);
+  const bundles10 = parseBundleCount(snap.g10);
+  const bundles11 = parseBundleCount(snap.g11);
+  const bundles14Partial = snap.partials.reduce((sum, p) => sum + parseBundleCount(p), 0);
+  const bundles14Full = parseBundleCount(snap.g14Full);
+  return {
+    g10, g11, g14Partial, g14Full,
+    g14: g14Partial + g14Full,
+    total: g10 + g11 + g14Partial + g14Full,
+    bundles10, bundles11, bundles14Partial, bundles14Full
+  };
+}
+
+// === Dashboard view (stats, charts, summary) ===
+function renderDashboard() {
+  const act = computeActivity();
+  const totalsRecv = act.received.total;
+  const totalsShip = act.shipped.total;
+
+  const snap = getLatestSnapshot();
+  const t = snapshotTotals(snap);
+  const snapDateLabel = snap ? (isDateString(snap.date) ? fmtDate(snap.date) : (snap.date || "—")) : "—";
+
+  // Snapshot trend series filtered to MIN_DATE+, oldest -> newest.
+  const snaps = parseBalanceSnapshots()
+    .filter(s => isDateString(s.date) && s.date >= MIN_DATE)
+    .sort((a,b) => {
+      const cmp = (a.date).localeCompare(b.date);
+      if (cmp !== 0) return cmp;
+      return a.rowIdx - b.rowIdx;
+    });
+  // For same-date ties, keep only the last one (Excel ledger appended at bottom).
+  const trendByDate = new Map();
+  for (const s of snaps) {
+    trendByDate.set(s.date, snapshotTotals(s).total);
+  }
+  const trendLabels = [...trendByDate.keys()].map(d => fmtDate(d));
+  const trendValues = [...trendByDate.values()];
+
+  const byGauge = [
+    { gauge: "10 G", recv: act.received.g10.pallets, ship: act.shipped.g10.pallets, bal: t.g10 },
+    { gauge: "11 G", recv: act.received.g11.pallets, ship: act.shipped.g11.pallets, bal: t.g11 },
+    { gauge: "14 G", recv: act.received.g14.pallets, ship: act.shipped.g14.pallets, bal: t.g14 }
+  ];
+
+  const filterLabel = `Period: ${fmtDate(MIN_DATE)} onward`;
+
+  document.getElementById("view").innerHTML = `
+    <div style="margin-bottom: 16px;">
+      <span class="pill" style="background: rgba(245,158,11,.15); color: var(--accent); border-color: var(--accent);">${filterLabel}</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="label">Received (Pallets)</div>
+        <div class="value">${fmtNum(totalsRecv.pallets)}</div>
+        <div class="delta">${fmtNum(totalsRecv.units)} units · ${fmtNum(totalsRecv.sqft)} sq ft</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Shipped (Pallets)</div>
+        <div class="value">${fmtNum(totalsShip.pallets)}</div>
+        <div class="delta">${fmtNum(totalsShip.units)} units · ${fmtNum(totalsShip.sqft)} sq ft</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Current On Hand (Pallets)</div>
+        <div class="value">${fmtNum(t.total)}</div>
+        <div class="delta">as of ${snapDateLabel} · 10g ${t.g10} · 11g ${t.g11} · 14g ${t.g14}</div>
+      </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom: 16px;">
+      <h3>Total Pallets On Hand — Trend (${fmtDate(MIN_DATE)} onward)</h3>
+      <div class="chart-wrap" style="height:240px;"><canvas id="chartTrend"></canvas></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-card">
+        <h3>Received vs Shipped — Pallets by Gauge</h3>
+        <div class="chart-wrap"><canvas id="chartRS"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Current On Hand — Composition</h3>
+        <div class="chart-wrap"><canvas id="chartBal"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-head"><h3>Summary by Gauge</h3><span class="pill">${filterLabel} · On Hand from latest snapshot</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Gauge</th>
+            <th class="num">Received (plt)</th>
+            <th class="num">Shipped (plt)</th>
+            <th class="num">On Hand (plt)</th>
+          </tr></thead>
+          <tbody>
+            ${byGauge.map(g => `<tr>
+              <td>${g.gauge}</td>
+              <td class="num">${fmtNum(g.recv)}</td>
+              <td class="num">${fmtNum(g.ship)}</td>
+              <td class="num">${fmtNum(g.bal)}</td>
+            </tr>`).join("")}
+            <tr style="font-weight:700; background: var(--panel-2);">
+              <td>TOTAL</td>
+              <td class="num">${fmtNum(totalsRecv.pallets)}</td>
+              <td class="num">${fmtNum(totalsShip.pallets)}</td>
+              <td class="num">${fmtNum(t.total)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Charts
+  chartInstances.trend = new Chart(document.getElementById("chartTrend"), {
+    type: "line",
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        label: "Total pallets on hand",
+        data: trendValues,
+        borderColor: "#f59e0b",
+        backgroundColor: "rgba(245,158,11,.15)",
+        tension: .25,
+        fill: true,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#e2e8f0" } } },
+      scales: {
+        x: { ticks: { color: "#94a3b8", maxRotation: 0, autoSkip: true, maxTicksLimit: 12 }, grid: { color: "#273449" } },
+        y: { ticks: { color: "#94a3b8" }, grid: { color: "#273449" }, beginAtZero: true }
+      }
+    }
+  });
+
+  const labels = byGauge.map(g => g.gauge);
+  chartInstances.rs = new Chart(document.getElementById("chartRS"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Received", data: byGauge.map(g => g.recv), backgroundColor: "#f59e0b" },
+        { label: "Shipped",  data: byGauge.map(g => g.ship), backgroundColor: "#3b82f6" }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#e2e8f0" } } },
+      scales: {
+        x: { ticks: { color: "#94a3b8" }, grid: { color: "#273449" } },
+        y: { ticks: { color: "#94a3b8" }, grid: { color: "#273449" }, beginAtZero: true }
+      }
+    }
+  });
+
+  chartInstances.bal = new Chart(document.getElementById("chartBal"), {
+    type: "doughnut",
+    data: {
+      labels: ["10 G", "11 G", "14 G partial", "14 G full"],
+      datasets: [{
+        data: [t.g10, t.g11, t.g14Partial, t.g14Full],
+        backgroundColor: ["#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"]
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#e2e8f0" } } }
+    }
+  });
+}
+
+// === Current Inventory view (snapshot detail) ===
+function renderInventory() {
+  const snap = getLatestSnapshot();
+  if (!snap) {
+    document.getElementById("view").innerHTML = `<div class="empty">No inventory snapshots found.</div>`;
+    return;
+  }
+  const t = snapshotTotals(snap);
+  const snapDateLabel = isDateString(snap.date) ? fmtDate(snap.date) : (snap.date || "—");
+
+  document.getElementById("view").innerHTML = `
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="label">Total Pallets On Hand</div>
+        <div class="value">${fmtNum(t.total)}</div>
+        <div class="delta">as of ${snapDateLabel}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">10 G</div>
+        <div class="value">${fmtNum(t.g10)}</div>
+        <div class="delta">${snap.g10 || "—"}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">11 G</div>
+        <div class="value">${fmtNum(t.g11)}</div>
+        <div class="delta">${snap.g11 || "—"}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">14 G</div>
+        <div class="value">${fmtNum(t.g14)}</div>
+        <div class="delta">${fmtNum(t.g14Partial)} partial + ${fmtNum(t.g14Full)} full</div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-card">
+        <h3>Pallets by Gauge</h3>
+        <div class="chart-wrap"><canvas id="chartInvBars"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Composition</h3>
+        <div class="chart-wrap"><canvas id="chartInvDonut"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-head">
+        <h3>Current On Hand — ${snapDateLabel}</h3>
+        <span class="pill">From Balance Sheet snapshot</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Gauge</th>
+            <th class="num">Pallets</th>
+            <th>Detail</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>10 G</strong></td>
+              <td class="num">${fmtNum(t.g10)}</td>
+              <td>${snap.g10 ? String(snap.g10) : "—"}</td>
+            </tr>
+            <tr>
+              <td><strong>11 G</strong></td>
+              <td class="num">${fmtNum(t.g11)}</td>
+              <td>${snap.g11 ? String(snap.g11) : "—"}</td>
+            </tr>
+            <tr>
+              <td><strong>14 G — Partial</strong></td>
+              <td class="num">${fmtNum(t.g14Partial)}</td>
+              <td style="white-space:normal;">${snap.partials.length ? snap.partials.map(p => String(p)).join("<br>") : "—"}</td>
+            </tr>
+            <tr>
+              <td><strong>14 G — Full</strong></td>
+              <td class="num">${fmtNum(t.g14Full)}</td>
+              <td>${snap.g14Full ? String(snap.g14Full) : "—"}</td>
+            </tr>
+            <tr style="font-weight:700; background: var(--panel-2);">
+              <td>TOTAL</td>
+              <td class="num">${fmtNum(t.total)}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  chartInstances.invBars = new Chart(document.getElementById("chartInvBars"), {
+    type: "bar",
+    data: {
+      labels: ["10 G", "11 G", "14 G partial", "14 G full"],
+      datasets: [{
+        label: "Pallets",
+        data: [t.g10, t.g11, t.g14Partial, t.g14Full],
+        backgroundColor: ["#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"]
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "#94a3b8" }, grid: { color: "#273449" } },
+        y: { ticks: { color: "#94a3b8" }, grid: { color: "#273449" }, beginAtZero: true }
+      }
+    }
+  });
+  chartInstances.invDonut = new Chart(document.getElementById("chartInvDonut"), {
+    type: "doughnut",
+    data: {
+      labels: ["10 G", "11 G", "14 G partial", "14 G full"],
+      datasets: [{
+        data: [t.g10, t.g11, t.g14Partial, t.g14Full],
+        backgroundColor: ["#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"]
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#e2e8f0" } } }
+    }
+  });
+}
+
+// === Balance Sheet view (snapshot history) ===
+function renderBalanceSnapshots() {
+  // Filter to MIN_DATE+; newest first.
+  const snaps = parseBalanceSnapshots().filter(s => isDateString(s.date) && s.date >= MIN_DATE);
+  snaps.sort((a, b) => {
+    const cmp = b.date.localeCompare(a.date);
+    if (cmp !== 0) return cmp;
+    return b.rowIdx - a.rowIdx;
+  });
+
+  const rows = snaps.map(s => {
+    const t = snapshotTotals(s);
+    const dateLabel = isDateString(s.date) ? fmtDate(s.date) : (s.date != null ? String(s.date) : "—");
+    return `<tr>
+      <td><strong>${dateLabel}</strong></td>
+      <td class="num">${fmtNum(t.g10)}</td>
+      <td class="num">${fmtNum(t.g11)}</td>
+      <td class="num">${fmtNum(t.g14Partial)}</td>
+      <td class="num">${fmtNum(t.g14Full)}</td>
+      <td class="num"><strong>${fmtNum(t.total)}</strong></td>
+      <td style="white-space:normal; font-size:12px; color:var(--muted);">
+        10g: ${s.g10 || "—"}<br>
+        11g: ${s.g11 || "—"}<br>
+        14g partial: ${s.partials.length ? s.partials.join("; ") : "—"}<br>
+        14g full: ${s.g14Full || "—"}
+      </td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("view").innerHTML = `
+    <div class="table-card">
+      <div class="table-head">
+        <h3>Inventory Snapshots — Current On Hand History</h3>
+        <span class="pill">${snaps.length} snapshots</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Date</th>
+            <th class="num">10 G plt</th>
+            <th class="num">11 G plt</th>
+            <th class="num">14 G partial plt</th>
+            <th class="num">14 G full plt</th>
+            <th class="num">Total plt</th>
+            <th>Detail (as written)</th>
+          </tr></thead>
+          <tbody>
+            ${rows || `<tr><td colspan="7" class="empty">No snapshots parsed.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      <div class="table-foot">
+        <span>Showing ${snaps.length} snapshots (newest first)</span>
+        <span>Numeric totals parsed from text; detail column shows original cell contents</span>
+      </div>
+    </div>
+  `;
+}
+
+// === Generic sheet table ===
+function renderSheet(tabKey) {
+  const sheetName = TAB_TO_SHEET[tabKey];
+  const sheet = getSheet(sheetName);
+  if (!sheet) {
+    document.getElementById("view").innerHTML = `<div class="empty">Sheet not found: ${sheetName}</div>`;
+    return;
+  }
+
+  // Detect header row.
+  // Invoice sheets header is row 1.
+  // 10G / 11G header is row 2 (row 1 is title).
+  // Balance Sheet has no consistent header — show as-is.
+  let headerRowIdx = 0;
+  if (sheetName === "10 G" || sheetName === "11 G") headerRowIdx = 1;
+  if (sheetName === "Balance Sheet") headerRowIdx = -1; // no header
+
+  const cells = sheet.cells;
+  let headers, body;
+  if (headerRowIdx >= 0) {
+    headers = (cells[headerRowIdx] || []).map(h => (h == null ? "" : String(h).trim()));
+    body = cells.slice(headerRowIdx + 1);
+    // For sheets with title row above header, also skip empty leading title cells of body
+  } else {
+    // Balance Sheet: generic column labels
+    const maxCols = Math.max(...cells.map(r => r.length));
+    headers = Array.from({length: maxCols}, (_, i) => "Col " + (i+1));
+    body = cells;
+  }
+
+  const st = tableState[tabKey] ||= { sortCol: -1, sortDir: 1, search: "" };
+
+  // Filter: drop empty rows, then drop rows whose only dates are before MIN_DATE.
+  // (Rows that contain no date at all are kept — e.g. shipments with no recv/ship date yet.)
+  let rows = body.filter(r => {
+    if (!r.some(c => c != null && String(c).trim() !== "")) return false;
+    if (sheetName === "Balance Sheet") return true; // balance sheet handled separately
+    return !rowAnyDate(r) || rowHasInRangeDate(r);
+  });
+  if (st.search) {
+    const q = st.search.toLowerCase();
+    rows = rows.filter(r => r.some(c => c != null && String(c).toLowerCase().includes(q)));
+  }
+  // Sort
+  if (st.sortCol >= 0) {
+    rows.sort((a,b) => {
+      const av = a[st.sortCol], bv = b[st.sortCol];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === "number" && typeof bv === "number") return (av - bv) * st.sortDir;
+      return String(av).localeCompare(String(bv)) * st.sortDir;
+    });
+  }
+
+  document.getElementById("view").innerHTML = `
+    <div class="table-card">
+      <div class="table-head">
+        <h3>${sheetName.trim()}</h3>
+        <div class="controls">
+          <input id="search" placeholder="Search…" value="${st.search.replace(/"/g,'&quot;')}">
+          <span class="pill">${rows.length} rows</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            ${headers.map((h, i) => {
+              const cls = st.sortCol === i ? (st.sortDir === 1 ? "sorted-asc" : "sorted-desc") : "";
+              return `<th data-col="${i}" class="${cls}">${h || ""}</th>`;
+            }).join("")}
+          </tr></thead>
+          <tbody>
+            ${rows.slice(0, 1000).map(r => `<tr>${
+              headers.map((_, i) => {
+                const v = r[i];
+                const isNum = typeof v === "number";
+                const isNeg = isNum && v < 0;
+                return `<td class="${isNum ? 'num' : ''} ${isNeg ? 'neg' : ''}">${fmtCell(v)}</td>`;
+              }).join("")
+            }</tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="table-foot">
+        <span>Showing ${Math.min(rows.length, 1000)} of ${rows.length} rows${rows.length > 1000 ? ' (first 1000 — refine search to see more)' : ''}</span>
+        <span>Click column headers to sort</span>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll("thead th").forEach(th => {
+    th.addEventListener("click", () => {
+      const c = +th.dataset.col;
+      if (st.sortCol === c) st.sortDir = -st.sortDir;
+      else { st.sortCol = c; st.sortDir = 1; }
+      renderSheet(tabKey);
+    });
+  });
+  const search = document.getElementById("search");
+  if (search) {
+    search.addEventListener("input", e => {
+      st.search = e.target.value;
+      renderSheet(tabKey);
+      const ns = document.getElementById("search");
+      if (ns) { ns.focus(); ns.setSelectionRange(ns.value.length, ns.value.length); }
+    });
+  }
+}
+
+// === Boot ===
+if (sessionStorage.getItem("paw_authed") === "1") {
+  ROLE = sessionStorage.getItem("paw_role") || "customer";
+  showApp();
+}
+</script>
+</body>
+</html>

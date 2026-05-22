@@ -1,0 +1,11 @@
+# Local preview server config (machine-specific absolute paths)
+.claude/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor swap files
+*.swp
+*.swo
+*~
